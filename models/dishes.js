@@ -2,7 +2,7 @@
 
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-
+ 
 //loading mongoose currency type in mongoose
 require('mongoose-currency').loadType(mongoose);
 
