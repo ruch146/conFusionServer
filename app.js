@@ -4,6 +4,11 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+var session=require('express-session');
+var FileStore=require('session-file-store')(session);
+
+
+
 //for connection with the databse
 const mongoose = require('mongoose');
 
@@ -36,46 +41,57 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+//setting session middleware
+app.use(session({
+  name: 'session-id',
+  secret: '12345-67890-09876-54321',
+  saveUninitialized: false,
+  resave: false,
+  store: new FileStore()
+}));
 //secret key as parameter to encrypt info and sign the cookie which is sent from server to client
-app.use(cookieParser('12345-67890-09876-54321'));
+//app.use(cookieParser('12345-67890-09876-54321'));
 
 
 //modifying this to use cookies instead of authorization middleware
 
 function auth (req, res, next) {
-  //if the cookie doesnt exist perform basic authentication
-  if (!req.signedCookies.user) {
-    var authHeader = req.headers.authorization;
-    if (!authHeader) {
-        var err = new Error('You are not authenticated!');
-        res.setHeader('WWW-Authenticate', 'Basic');              
-        err.status = 401;
-        next(err);
-        return;
-    }
-    var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-    var user = auth[0];
-    var pass = auth[1];
-    if (user == 'admin' && pass == 'password') {
-      //set the cookie on client side
-        res.cookie('user','admin',{signed: true});
-        next(); // authorized
-    } else {
-        var err = new Error('You are not authenticated!');
-        res.setHeader('WWW-Authenticate', 'Basic');              
-        err.status = 401;
-        next(err);
-    }
+  console.log(req.session);
+
+  if (!req.session.user) {
+      var authHeader = req.headers.authorization;
+      if (!authHeader) {
+          var err = new Error('You are not authenticated!');
+          res.setHeader('WWW-Authenticate', 'Basic');                        
+          err.status = 401;
+          next(err);
+          return;
+      }
+      var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+      var user = auth[0];
+      var pass = auth[1];
+      if (user == 'admin' && pass == 'password') {
+          req.session.user = 'admin';
+          next(); // authorized
+      } else {
+          var err = new Error('You are not authenticated!');
+          res.setHeader('WWW-Authenticate', 'Basic');
+          err.status = 401;
+          next(err);
+          return;
+      }
   }
-  //if cookie exist
   else {
-      if (req.signedCookies.user === 'admin') {
+      if (req.session.user === 'admin') {
+          console.log('req.session: ',req.session);
           next();
       }
       else {
           var err = new Error('You are not authenticated!');
           err.status = 401;
           next(err);
+          return;
       }
   }
 }
