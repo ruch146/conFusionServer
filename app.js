@@ -7,6 +7,9 @@ var logger = require('morgan');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
 
+var passport=require('passport');
+var authenticate=require('./authenticate')
+
 
 
 //for connection with the databse
@@ -53,6 +56,9 @@ app.use(session({
 //secret key as parameter to encrypt info and sign the cookie which is sent from server to client
 //app.use(cookieParser('12345-67890-09876-54321'));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 //user can access these without authentication
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -60,23 +66,15 @@ app.use('/users', usersRouter);
 //modifying this to use cookies instead of authorization middleware
 
 function auth(req, res, next) {
-  console.log(req.session);
 
-  if (!req.session.user) {
+  if (!req.user) {
     var err = new Error('You are not authenticated!');
     err.status = 401;
     return next(err);
   }
   else {
-    if (req.session.user === 'authenticated') {
-      console.log('req.session: ', req.session);
-      next();
-    }
-    else {
-      var err = new Error('You are not authenticated!');
-      err.status = 403;
-      return next(err);
-    }
+    next();
+    
   }
 }
 app.use(auth);
