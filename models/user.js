@@ -7,12 +7,19 @@ var passportLocalMongoose = require('passport-local-mongoose');
 
 
 //username and  hashed passport support will be automatically added by mongoose plugin
-var User=new Schema({
-    admin:{
-        type:Boolean,
-        dafault:false
+var User = new Schema({
+    firstname: {
+      type: String,
+        default: ''
+    },
+    lastname: {
+      type: String,
+        default: ''
+    },
+    admin:   {
+        type: Boolean,
+        default: false
     }
-
 });
 
 User.plugin(passportLocalMongoose);
