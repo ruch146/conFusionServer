@@ -58,3 +58,13 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts,
 //f it is included then it is extracted and that will be used to authenticate the user based on taken
 exports.verifyUser = passport.authenticate('jwt', {session: false});
 
+exports.verifyAdmin = function (req, res, next) {
+    if (req.user.admin) {
+        next();
+    } else {
+        var err = new Error('You are not authorized to perform this operation!');
+        err.status = 403;
+        return next(err);
+    }
+}
+
